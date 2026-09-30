@@ -249,20 +249,7 @@ export class Worker {
       reportUsage: (usage) => {
         meter.add(usage);
       },
-      generateText: async (options) => {
-        const result = await generateText({
-          ...options,
-          abortSignal: options.abortSignal ?? signal,
-          headers: { 'Idempotency-Key': idempotencyKey, ...options.headers },
-        });
-        const model = options.model;
-        meter.add({
-          inputTokens: result.usage.inputTokens ?? 0,
-          outputTokens: result.usage.outputTokens ?? 0,
-          modelId: typeof model === 'string' ? model : model.modelId,
-        });
-        return result;
-      },
+      generateText: meteredGenerateText(idempotencyKey, signal, meter),
     };
 
     const retries = stage.retries ?? 0;
@@ -442,6 +429,30 @@ export class Worker {
       await emit(runId, { type: 'released', workerId: this.id });
     });
   }
+}
+
+/**
+ * `generateText` with the stage's idempotency key and abort signal applied
+ * and its usage recorded. The cast keeps the SDK's generic signature (tools,
+ * structured output) intact for callers; the wrapper itself only touches
+ * options and usage, which are the same for every instantiation.
+ */
+function meteredGenerateText(idempotencyKey: string, signal: AbortSignal, meter: UsageMeter): typeof generateText {
+  const wrapped = async (options: Parameters<typeof generateText>[0]) => {
+    const result = await generateText({
+      ...options,
+      abortSignal: options.abortSignal ?? signal,
+      headers: { 'Idempotency-Key': idempotencyKey, ...options.headers },
+    });
+    const model = options.model;
+    meter.add({
+      inputTokens: result.usage.inputTokens ?? 0,
+      outputTokens: result.usage.outputTokens ?? 0,
+      modelId: typeof model === 'string' ? model : model.modelId,
+    });
+    return result;
+  };
+  return wrapped as typeof generateText;
 }
 
 function abortReason(signal: AbortSignal): Error {

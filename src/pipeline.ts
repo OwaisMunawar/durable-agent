@@ -23,9 +23,6 @@ export function isAwaitApproval(value: unknown): value is AwaitApproval {
   return typeof value === 'object' && value !== null && AWAIT_APPROVAL in value;
 }
 
-type GenerateTextOptions = Parameters<typeof generateText>[0];
-type GenerateTextResult = Awaited<ReturnType<typeof generateText>>;
-
 export interface StageContext<I = unknown> {
   readonly runId: string;
   readonly pipeline: string;
@@ -50,7 +47,7 @@ export interface StageContext<I = unknown> {
    * `generateText` from the AI SDK with the idempotency key, abort signal and
    * usage accounting wired in.
    */
-  generateText(options: GenerateTextOptions): Promise<GenerateTextResult>;
+  readonly generateText: typeof generateText;
 }
 
 /**
