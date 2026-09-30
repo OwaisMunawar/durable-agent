@@ -1,5 +1,6 @@
 import type { Database } from './db.js';
 
+/** DDL for `runs`, `stage_results` and `events`. Exposed for teams that manage migrations themselves. */
 // Money is stored as integer micro-dollars so run totals are exact sums of
 // stage costs; floating point drift would make "no double billing" untestable.
 // The script runs as one implicit transaction; the advisory lock keeps two
@@ -82,6 +83,7 @@ create trigger events_no_truncate
   for each statement execute function durable_agent_events_append_only();
 `;
 
+/** Create the tables, indexes and append-only triggers if they don't exist. Idempotent. */
 export async function migrate(db: Database): Promise<void> {
   await db.exec(SCHEMA_SQL);
 }

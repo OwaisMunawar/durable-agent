@@ -2,10 +2,12 @@
  * Minimal database surface the engine needs. Both `pg` and PGlite satisfy it
  * through the adapters below, so the library never imports either driver.
  */
+/** Anything that can run a parameterised query: a pool, a client or a transaction. */
 export interface Queryable {
   query<T = Record<string, unknown>>(sql: string, params?: unknown[]): Promise<{ rows: T[] }>;
 }
 
+/** The storage surface the engine needs. Build one with {@link fromPg} or {@link fromPGlite}. */
 export interface Database extends Queryable {
   /** Run several statements (no parameters), e.g. a migration script. */
   exec(sql: string): Promise<void>;
@@ -32,6 +34,7 @@ export interface PGliteLike {
   ): Promise<T>;
 }
 
+/** Adapt a `pg.Pool`. Transactions check out a dedicated client. */
 export function fromPg(pool: PgPoolLike): Database {
   return {
     async query<T>(sql: string, params?: unknown[]) {
@@ -69,6 +72,7 @@ export function fromPg(pool: PgPoolLike): Database {
   };
 }
 
+/** Adapt an in-process PGlite instance. Handy for tests, demos and single-process apps. */
 export function fromPGlite(db: PGliteLike): Database {
   return {
     query: (sql, params) => db.query(sql, params),

@@ -1,10 +1,12 @@
 import type { generateText } from 'ai';
 import type { Pricing, Usage } from './cost.js';
 
+/** Any JSON-serialisable value. Stage outputs and inputs are stored as jsonb. */
 export type Json = null | boolean | number | string | Json[] | { [key: string]: Json };
 
 const AWAIT_APPROVAL = Symbol.for('durable-agent.awaitApproval');
 
+/** Marker returned by {@link awaitApproval}. */
 export interface AwaitApproval<P = unknown> {
   readonly [AWAIT_APPROVAL]: true;
   readonly proposal: P;
@@ -19,10 +21,12 @@ export function awaitApproval<P>(proposal: P): AwaitApproval<P> {
   return { [AWAIT_APPROVAL]: true, proposal };
 }
 
+/** True if a stage's return value is an {@link awaitApproval} marker. */
 export function isAwaitApproval(value: unknown): value is AwaitApproval {
   return typeof value === 'object' && value !== null && AWAIT_APPROVAL in value;
 }
 
+/** Everything a stage can see and do. Built fresh for every attempt. */
 export interface StageContext<I = unknown> {
   readonly runId: string;
   readonly pipeline: string;
@@ -58,6 +62,7 @@ export type StageFn<I = unknown, O = unknown> = (
   ctx: StageContext<I>,
 ) => O | AwaitApproval<O> | Promise<O | AwaitApproval<O>>;
 
+/** A named step of a pipeline. Stage names must be unique within the pipeline. */
 export interface Stage<I = unknown, O = unknown> {
   name: string;
   run: StageFn<I, O>;
@@ -67,6 +72,7 @@ export interface Stage<I = unknown, O = unknown> {
   retryDelayMs?: number;
 }
 
+/** An ordered list of stages. `I` is the type of the run input. */
 export interface Pipeline<I = unknown> {
   name: string;
   stages: Stage<I>[];
@@ -74,6 +80,7 @@ export interface Pipeline<I = unknown> {
   pricing?: Pricing;
 }
 
+/** Shorthand for building a {@link Stage}. */
 export function stage<I = unknown, O = unknown>(
   name: string,
   run: StageFn<I, O>,
@@ -82,6 +89,7 @@ export function stage<I = unknown, O = unknown>(
   return { name, run, ...options };
 }
 
+/** Validate and return a pipeline definition (non-empty, unique stage names). */
 export function definePipeline<I = unknown>(pipeline: Pipeline<I>): Pipeline<I> {
   if (!pipeline.name) throw new Error('pipeline needs a name');
   if (pipeline.stages.length === 0) throw new Error(`pipeline "${pipeline.name}" has no stages`);

@@ -1,3 +1,4 @@
+/** Token usage (and optionally a precomputed cost) reported by a stage. */
 export interface Usage {
   inputTokens?: number;
   outputTokens?: number;
@@ -6,6 +7,7 @@ export interface Usage {
   modelId?: string;
 }
 
+/** Price of one model. */
 export interface TokenPrice {
   /** USD per million input tokens. */
   inputPerMTok: number;
@@ -36,6 +38,7 @@ function isTokenPrice(p: unknown): p is TokenPrice {
   return typeof p === 'object' && p !== null && 'inputPerMTok' in p && 'outputPerMTok' in p;
 }
 
+/** USD cost of `usage` under `pricing`. An explicit `usage.costUsd` wins; unknown models cost 0. */
 export function priceUsage(usage: Usage, pricing: Pricing | undefined): number {
   if (usage.costUsd !== undefined) return usage.costUsd;
   const inputTokens = usage.inputTokens ?? 0;
