@@ -1,0 +1,97 @@
+{
+  "name": "durable-agent",
+  "version": "0.1.0",
+  "description": "Crash-safe, resumable LLM pipelines on Postgres: committed stages, leased workers, human approval gates and an append-only audit log.",
+  "keywords": [
+    "llm",
+    "ai",
+    "agents",
+    "pipeline",
+    "postgres",
+    "durable-execution",
+    "workflow",
+    "mcp",
+    "ai-sdk",
+    "human-in-the-loop"
+  ],
+  "license": "MIT",
+  "author": "Owais Munawwar <owais.munawar@gmail.com>",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/OwaisMunawar/durable-agent.git"
+  },
+  "homepage": "https://github.com/OwaisMunawar/durable-agent#readme",
+  "bugs": {
+    "url": "https://github.com/OwaisMunawar/durable-agent/issues"
+  },
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./mcp": {
+      "types": "./dist/mcp.d.ts",
+      "import": "./dist/mcp.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "bin": {
+    "durable-agent": "./dist/cli.js"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc -p .",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "example": "tsx examples/brief-to-backlog/run.ts",
+    "crash-demo": "tsx scripts/crash-demo.ts",
+    "mcp:example": "tsx src/cli.ts mcp --pipelines examples/brief-to-backlog/pipeline.ts --worker",
+    "prepublishOnly": "npm run typecheck && npm run lint && npm test && npm run build"
+  },
+  "peerDependencies": {
+    "ai": "^7.0.0",
+    "@electric-sql/pglite": ">=0.3"
+  },
+  "peerDependenciesMeta": {
+    "@electric-sql/pglite": {
+      "optional": true
+    }
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.31.0",
+    "pg": "^8.23.0",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@electric-sql/pglite": "^0.5.8",
+    "@eslint/js": "^9.39.5",
+    "@types/node": "^22.20.4",
+    "@types/pg": "^8.23.1",
+    "@vitest/coverage-v8": "^3.2.7",
+    "eslint": "^9.39.5",
+    "fast-check": "^4.10.2",
+    "prettier": "^3.9.9",
+    "tsup": "^8.5.1",
+    "tsx": "^4.23.15",
+    "typescript": "~6.0.3",
+    "typescript-eslint": "^8.71.0",
+    "vitest": "^3.2.7"
+  }
+}
