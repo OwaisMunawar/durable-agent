@@ -65,7 +65,7 @@ async function main(): Promise<void> {
   const command = positionals[0];
   if (values.help || !command) {
     process.stderr.write(`${USAGE}\n`);
-    process.exit(command ? 0 : 1);
+    process.exit(values.help ? 0 : 1);
   }
 
   const { db, close } = await openDatabase(values.pglite);
