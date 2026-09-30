@@ -1,0 +1,53 @@
+$ npm run crash-demo
+
+durable-agent crash demo  (postgres localhost:54329, lease 2s)
+
+>> queued run e6b1b81e: extract -> draft -> [approval] -> finalize
+
+[worker-a] pid 39749, polling for work
+[worker-a] claimed run e6b1b81e
+[worker-a] extract   started    attempt 1
+[worker-a] extract   committed   178 tok  $0.000200
+[worker-a] draft     started    attempt 1
+
+!! kill -9 39749  (worker-a was mid-call in "draft")
+   postgres: status=running, lease=worker-a, committed=extract, cost=$0.000200
+
+[worker-b] pid 39826, polling for work
+[worker-b] lease of worker-a expired, taking over
+[worker-b] resumed at stage 2/3 (already committed: extract)
+[worker-b] draft     started    attempt 2
+[worker-b] draft     committed   316 tok  $0.000392
+[worker-b] draft     paused for human approval, lease released
+
+>> reviewer approves 7 user stories
+
+[worker-b] resumed at stage 3/3 (already committed: extract, draft)
+[worker-b] finalize  started    attempt 1
+[worker-b] finalize  committed   267 tok  $0.000116
+[worker-b] run completed, total $0.000708
+
+stage      committed by  attempts  tokens  cost
+extract    worker-a      1         178     $0.000200
+draft      worker-b      2         316     $0.000392
+finalize   worker-b      1         267     $0.000116
+
+run total $0.000708 = sum of committed stages $0.000708  OK
+"extract" ran once. The killed "draft" attempt was never committed, so it is not in the total.
+
+audit log (append-only):
+  #1   created                      
+  #2   started                      worker-a
+  #3   stage_started      extract   worker-a
+  #4   stage_completed    extract   worker-a
+  #5   stage_started      draft     worker-a
+  #6   lease_expired                worker-a
+  #7   resumed                      worker-b
+  #8   stage_started      draft     worker-b
+  #9   stage_completed    draft     worker-b
+  #10  awaiting_approval  draft     worker-b
+  #11  approved           draft     
+  #12  resumed                      worker-b
+  #13  stage_started      finalize  worker-b
+  #14  stage_completed    finalize  worker-b
+  #15  completed                    worker-b
