@@ -76,4 +76,9 @@ describe.each(backends.slice(0, 1))('MCP server ($name)', (backend) => {
     expect(rejected.status).toBe('rejected');
     await expect(call('start_run', { pipeline: 'missing', input: {} })).rejects.toThrow(/UNKNOWN_PIPELINE/);
   });
+
+  it('surfaces unexpected errors instead of reporting them as tool results', async () => {
+    // Not a DurableAgentError: Postgres rejects the malformed uuid.
+    await expect(call('get_run', { runId: 'not-a-uuid' })).rejects.toThrow(/uuid/);
+  });
 });
