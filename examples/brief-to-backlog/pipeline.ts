@@ -46,7 +46,7 @@ export const briefToBacklog = definePipeline<{ brief: string }>({
     stage('extract', async (ctx) => {
       const { output } = await ctx.generateText({
         model,
-        system: '[extract] List the distinct product requirements in this brief. One sentence each.',
+        instructions: '[extract] List the distinct product requirements in this brief. One sentence each.',
         prompt: ctx.input.brief,
         output: Output.object({ schema: requirementsSchema }),
       });
@@ -59,7 +59,7 @@ export const briefToBacklog = definePipeline<{ brief: string }>({
         const { requirements } = ctx.outputs.extract as z.infer<typeof requirementsSchema>;
         const { output } = await ctx.generateText({
           model,
-          system: '[stories] Write one or more user stories per requirement, "As a <role> I can ...".',
+          instructions: '[stories] Write one or more user stories per requirement, "As a <role> I can ...".',
           prompt: JSON.stringify(requirements),
           output: Output.object({ schema: storiesSchema }),
         });
@@ -73,7 +73,7 @@ export const briefToBacklog = definePipeline<{ brief: string }>({
       const { stories } = ctx.outputs.draft as Stories;
       const { output } = await ctx.generateText({
         model,
-        system: '[finalize] Estimate each story in points (1,2,3,5,8) and order them by priority.',
+        instructions: '[finalize] Estimate each story in points (1,2,3,5,8) and order them by priority.',
         prompt: JSON.stringify(stories),
         output: Output.object({ schema: planSchema }),
       });
